@@ -64,6 +64,38 @@ def inverse_data(data, min_val, max_val):
     original_data = data * (max_val - min_val) + min_val
     return original_data
 
+def back_data(data):
+    # คำนวณค่าเฉลี่ย
+    avg_value = np.mean(data)
+
+    # สร้าง Numpy array เพื่อเก็บผลลัพธ์
+    result = np.empty(data.shape, dtype=str)
+
+    # วนลูปผ่านข้อมูลและกำหนดค่า M หรือ B ตามเงื่อนไข
+    for i in range(data.shape[0]):
+        if data[i] > avg_value:
+            result[i] = 'M'
+        else:
+            result[i] = 'B'
+
+    return result
+
+def calculate_error(actual, predict):
+    if len(actual) != len(predict):
+        raise ValueError("Actual and Predict must have the same length")
+
+    error_count = 0
+    total_samples = len(actual)
+
+    for i in range(total_samples):
+        if actual[i] != predict[i]:
+            error_count += 1
+
+    error_rate = error_count / total_samples
+    accuracy = 1 - error_rate  # ความแม่นยำคือ 1 ลบออกจากความคลาดเคลื่อน
+
+    return error_rate, accuracy*100
+        
 # Sigmoid activation function
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -99,8 +131,7 @@ def train_mlp_with_ga(input_data,output_data, hidden_size, num_generations, popu
     for generation in range(num_generations):
         # Initialize the population with random weights
         population = np.random.randn(population_size, w_input_to_hidden.size + w_hidden_to_output.size)
-        #print(population.shape)
-        #print(w_input_to_hidden.size + w_hidden_to_output.size)
+     
         # Evaluate the fitness of each individual in the population
         fitness_scores = np.array([fitness_function(individual, input_data, output_data, w_input_to_hidden, w_hidden_to_output) 
                                    for individual in population])
@@ -147,10 +178,10 @@ if __name__ == "__main__":
     data_file = "WDBC.txt"
     
     input_size = 30
-    hidden_size = 16 # สามารถกำหนดเองได้
+    hidden_size = 50 # สามารถกำหนดเองได้
     output_size = 1
     
-    num_generations = 20# สามารถกำหนดเองได้
+    num_generations = 10# สามารถกำหนดเองได้
     population_size = 200# สามารถกำหนดเองได้
     mutation_rate = 0.5# สามารถกำหนดเองได้
     K_segments = 10
@@ -170,19 +201,27 @@ if __name__ == "__main__":
                                                                   num_generations, population_size, mutation_rate)
           
         input_testdata, output_actual_normalize,min_test,max_test = preprocess_data(test_data[i])
-        #print(input_testdata.shape)
+        
         _,output_predict_normalize = forward_propagation(input_testdata, w_input_to_hidden, w_hidden_to_output)
         
         output_actual = inverse_data(output_actual_normalize, max_test, min_test).reshape(-1, 1)
         output_predict= inverse_data(output_predict_normalize, max_test, min_test).T
         
-        #print(output_actual)
-        #print( output_predict)
-        # ตรวจสอบขนาดของข้อมูลหลังการแปลง
-        
-        Accuracy = calculate_accuracy(output_actual,output_predict)
-        
-        
+        output_actual = back_data(output_actual)
+        output_predict = back_data(output_predict)
+        #print(output_actual.shape)
+        error_rate,Accuracy = calculate_error(output_actual,output_predict)
+        correct_predictions = [actual == predict for actual, predict in zip(output_actual,output_predict)]
+
+        # แสดงผลลัพธ์
+        #print("Actual Output\tPredict Output")
+        #for actual, predict, is_correct in zip(output_actual, output_predict, correct_predictions):
+            #if is_correct:
+                #print(f"{' ' * 12}{actual}\t{' ' * 10}{predict}")
+            #else:
+                #print(f"{actual}\t{predict}")
+                      
+        print(f"************error_rate = {error_rate}  **************")
         print(f"************Accuracy = {Accuracy} % **************")
         
        
