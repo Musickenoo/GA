@@ -44,22 +44,6 @@ def preprocess_data(data):
     
     return input_data, output_data
 
-# Get the min and max values from the dataset
-def get_min_max(data):
-    flattened_data = data.flatten()
-    max_val = np.max(flattened_data)
-    min_val = np.min(flattened_data)
-    return min_val, max_val
-
-# Normalize the data to be in the range [0, 1]
-def normalize_data(data, min_val, max_val):
-    return (data - min_val) / (max_val - min_val)
-
-def inverse_data(data, min_val, max_val):
-    # Perform inverse min-max scaling to denormalize the data
-    original_data = data * (max_val - min_val) + min_val
-    return original_data
-
 def back_data(data):
     # คำนวณค่าเฉลี่ย
     avg_value = np.mean(data)
